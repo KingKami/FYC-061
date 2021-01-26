@@ -1,0 +1,12 @@
+{{ define "__single_message_title" }}{{ range .Alerts.Firing }} {{ .Labels.severity }}@{{ .Annotations.identifier }} {{ .Labels.alertname }} {{ end }}{{ range .Alerts.Resolved }}{{ .Labels.alertname }} @ {{ .Annotations.identifier }}{{ end }}{{ end }}
+{{ define "__warning_message_title" }}:warning: WARNING!{{ end }}
+{{ define "__critical_message_title" }}:critical: CRITICAL!{{ end }}
+{{ define "custom_title" }}[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}]{{ if or (and (eq (len .Alerts.Firing) 1) (eq (len .Alerts.Resolved) 0)) (and (eq (len .Alerts.Firing) 0) (eq (len .Alerts.Resolved) 1)) }}{{ template "__single_message_title" . }}{{ else }}{{ if eq .Labels.severity "critical" }}{{ template "__critical_message_title" . }}{{ else if eq .Labels.severity "warning" }}{{ template "__warning_message_title" . }}{{ end }}{{ end }}{{ end }}
+{{ define "custom_slack_message" }}{{ if or (and (eq (len .Alerts.Firing) 1) (eq (len .Alerts.Resolved) 0)) (and (eq (len .Alerts.Firing) 0) (eq (len .Alerts.Resolved) 1)) }}{{ range .Alerts.Firing }}*{{ .Labels.severity }}@{{ .Annotations.identifier }}:* {{ .Annotations.description }}{{ end }}{{ range .Alerts.Resolved }}*Resolved@{{ .Annotations.identifier }}:* {{ .Annotations.description }}{{ end }}{{ else }}{{ if gt (len .Alerts.Firing) 0 }}
+*Alerts Firing:*
+{{ range .Alerts.Firing }}- *{{ .Labels.severity }}@{{ .Annotations.identifier }}:* {{ .Annotations.description }}{{ end }}{{ end }}
+{{ if gt (len .Alerts.Resolved) 0 }}*Alerts Resolved:*
+{{ range .Alerts.Resolved }}- *Resolved@{{ .Annotations.identifier }}:* {{ .Annotations.description }}{{ end }}
+{{ end }}
+{{ end }}
+{{ end }}
